@@ -1,37 +1,35 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+
+const SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiOf_qura1UpraCi0qQxYSBw6VMxfz9kRXUpQqnau1inIbWaFtyfA5DHKGzuFPhTbENNj18HNt6Iw2QUczIyZ3R0wdzc4rXj7Jfdt2wWN9RHT-7qLgA2LwEV2v9PNqQFMLwCuVWPFyhOVVY12lg4sRWCwiYGxY9Qs9PRSQpNNwAZmHdao1oRhkWw-hlUBmegLEblEsBZaIIkrCxaO1pL6lGrS68B905psKpEenD4baSk1xwaiuK6qemwKKODg4tos9PSa0t91D_SSP_o_njFSBR8rS0Rw&lib=MGthlI05eQ21eaX7oSGWM8ufF-xda-4F0";
 
 const durianTypes = [
-  "ก้านยาว",
   "หมอนทอง",
+  "ก้านยาว",
   "ชะนี",
-  "กบชายน้ำ",
-  "กบแม่เฒ่า",
-  "กระดุม",
-  "พวงมณี",
   "หลงลับแล",
   "หลินลับแล",
+  "กระดุม",
+  "พวงมณี",
+  "นกหยิบ",
+  "กบชายน้ำ"
 ];
 
-export default function DurianBooking() {
-  const [order, setOrder] = useState(
-    durianTypes.reduce((acc, type) => ({ ...acc, [type]: 0 }), {})
-  );
+const price = 500;
+
+function App() {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
-  const price = 500;
-  const total = Object.values(order).reduce(
-    (sum, qty) => sum + qty * price,
-    0
+  const [order, setOrder] = useState(
+    durianTypes.reduce((acc, t) => ({ ...acc, [t]: 0 }), {})
   );
 
-  const handleChange = (type, value) => {
-    setOrder((prev) => ({ ...prev, [type]: Math.max(0, Number(value)) }));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const handleSubmit = () => {
-    const selected = Object.entries(order).filter(([_, qty]) => qty > 0);
+    const selected = Object.entries(order)
+      .filter(([_, qty]) => qty > 0)
+      .map(([type, qty]) => ({ type, qty, total: qty * price }));
+
     if (selected.length === 0) {
       alert("กรุณาเลือกทุเรียนอย่างน้อย 1 ลูก");
       return;
@@ -41,85 +39,78 @@ export default function DurianBooking() {
       return;
     }
 
-    const data = {
+    const payload = {
       customerName,
       phone,
-      items: selected.map(([type, qty]) => ({ type, qty, total: qty * price })),
-      grandTotal: total,
+      items: selected,
+      grandTotal: selected.reduce((s, it) => s + it.total, 0),
+      status: "รอชำระ"
     };
 
-    console.log("ส่งข้อมูลไป Google Sheets:", data);
-    alert("บันทึกคำสั่งซื้อเรียบร้อย!");
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-    // reset form
-    setCustomerName("");
-    setPhone("");
-    setOrder(durianTypes.reduce((acc, type) => ({ ...acc, [type]: 0 }), {}));
+      const json = await res.json();
+      if (json.status === "success") {
+        alert("บันทึกการพรีออเดอร์เรียบร้อยแล้ว!");
+        setCustomerName("");
+        setPhone("");
+        setOrder(durianTypes.reduce((acc, t) => ({ ...acc, [t]: 0 }), {}));
+      } else {
+        alert("เกิดข้อผิดพลาด: " + (json.message || "ไม่ทราบสาเหตุ"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("ส่งข้อมูลไม่สำเร็จ");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50 p-6">
-      <Card className="w-full max-w-2xl shadow-xl rounded-2xl">
-        <CardContent className="p-6 space-y-4">
-          <h1 className="text-2xl font-bold text-center">จองทุเรียนออนไลน์</h1>
-          <p className="text-center text-gray-600">ลูกละ 500 บาท</p>
+    <div style={{ padding: "20px" }}>
+      <h1>ระบบพรีออเดอร์ทุเรียน</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>ชื่อ-นามสกุล: </label>
+          <input
+            type="text"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>เบอร์โทร: </label>
+          <input
+            type="text"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </div>
 
-          {/* ข้อมูลลูกค้า */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-2 font-semibold">ชื่อผู้จอง</label>
-              <input
-                type="text"
-                className="w-full border rounded-lg p-2"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-semibold">เบอร์โทร</label>
-              <input
-                type="tel"
-                className="w-full border rounded-lg p-2"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* เลือกสายพันธุ์และจำนวน */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {durianTypes.map((type, i) => (
-              <div key={i} className="border rounded-lg p-3">
-                <label className="block font-semibold mb-1">{type}</label>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full border rounded-lg p-2"
-                  value={order[type]}
-                  onChange={(e) => handleChange(type, e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* แสดงราคา */}
-          <div className="text-lg font-bold text-center">
-            ราคารวมทั้งหมด: {total.toLocaleString()} บาท
-          </div>
-
-          {/* ปุ่มชำระเงิน */}
-          <div className="flex flex-col items-center space-y-3">
-            <img
-              src="/qrcode-promptpay.png"
-              alt="PromptPay QR"
-              className="w-40 h-40 border"
+        <h3>เลือกสายพันธุ์ทุเรียน (ลูกละ 500)</h3>
+        {durianTypes.map((type) => (
+          <div key={type}>
+            <label>{type}: </label>
+            <input
+              type="number"
+              min="0"
+              value={order[type]}
+              onChange={(e) =>
+                setOrder({ ...order, [type]: Number(e.target.value) })
+              }
             />
-            <Button className="w-full" onClick={handleSubmit}>
-              ยืนยันการจองและชำระเงิน
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+
+        <button type="submit" style={{ marginTop: "20px" }}>
+          สั่งจอง
+        </button>
+      </form>
     </div>
   );
 }
+
+export default App;
