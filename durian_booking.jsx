@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiOf_qura1UpraCi0qQxYSBw6VMxfz9kRXUpQqnau1inIbWaFtyfA5DHKGzuFPhTbENNj18HNt6Iw2QUczIyZ3R0wdzc4rXj7Jfdt2wWN9RHT-7qLgA2LwEV2v9PNqQFMLwCuVWPFyhOVVY12lg4sRWCwiYGxY9Qs9PRSQpNNwAZmHdao1oRhkWw-hlUBmegLEblEsBZaIIkrCxaO1pL6lGrS68B905psKpEenD4baSk1xwaiuK6qemwKKODg4tos9PSa0t91D_SSP_o_njFSBR8rS0Rw&lib=MGthlI05eQ21eaX7oSGWM8ufF-xda-4F0";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAZ8UanKaBwe2jMyedlWu5noso-oRAPRaNz9H7m1ZZBQ-bQqjaAR360Cmte6qE2ClF/exec";
 
 const durianTypes = [
   "หมอนทอง",
